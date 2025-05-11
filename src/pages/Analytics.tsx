@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart2, TrendingUp, ArrowRight, Calendar } from 'lucide-react';
+import { BarChart2, TrendingUp, ArrowRight, Calendar, Users } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 const performanceData = [
