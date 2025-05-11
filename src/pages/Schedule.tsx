@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Calendar as CalendarIcon, Clock, User, Trash2, Check, X } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isBefore, isToday, isSameDay } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -20,6 +20,7 @@ interface Appointment {
   customer: string;
   notes?: string;
   type: 'meeting' | 'call' | 'follow-up';
+  completed?: boolean;
 }
 
 const initialAppointments: Appointment[] = [
@@ -48,6 +49,25 @@ const initialAppointments: Appointment[] = [
     customer: 'Amit Sharma',
     notes: 'Check application status before call',
     type: 'follow-up'
+  },
+  // Add a few past appointments
+  {
+    id: '4',
+    title: 'Mutual Fund Discussion',
+    date: new Date(2025, 3, 5), // April 5, 2025 (past)
+    time: '3:00 PM',
+    customer: 'Vikram Rathod',
+    type: 'meeting',
+    completed: true
+  },
+  {
+    id: '5',
+    title: 'Health Insurance Follow-up',
+    date: new Date(2025, 3, 12), // April 12, 2025 (past)
+    time: '11:30 AM',
+    customer: 'Neha Patel',
+    type: 'call',
+    completed: true
   }
 ];
 
@@ -65,6 +85,7 @@ const Schedule = () => {
   });
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [isPastAppointmentDialogOpen, setIsPastAppointmentDialogOpen] = useState<boolean>(false);
   
   const customers = [
     'Raj Mehta', 'Priya Singh', 'Amit Sharma', 'Neha Patel', 'Vikram Rathod'
@@ -122,10 +143,33 @@ const Schedule = () => {
   
   const getAppointmentsForDate = (date: Date) => {
     return appointments.filter(appointment => 
-      appointment.date.getDate() === date.getDate() &&
-      appointment.date.getMonth() === date.getMonth() &&
-      appointment.date.getFullYear() === date.getFullYear()
+      isSameDay(appointment.date, date)
     );
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+      const appsForDay = getAppointmentsForDate(date);
+      
+      // Check if this is a past date with completed appointments
+      if (isBefore(date, new Date()) && appsForDay.some(app => !app.completed)) {
+        // Show dialog for past appointments that aren't marked as completed
+        setIsPastAppointmentDialogOpen(true);
+      }
+    }
+  };
+  
+  const markAppointmentsAsCompleted = () => {
+    if (selectedDate) {
+      setAppointments(prev => prev.map(app => 
+        isSameDay(app.date, selectedDate) && !app.completed 
+          ? {...app, completed: true} 
+          : app
+      ));
+      setIsPastAppointmentDialogOpen(false);
+      toast.success("Appointments marked as completed");
+    }
   };
   
   const currentAppointments = selectedDate ? getAppointmentsForDate(selectedDate) : [];
@@ -140,6 +184,16 @@ const Schedule = () => {
     'meeting': <User className="h-4 w-4" />,
     'call': <Phone className="h-4 w-4" />,
     'follow-up': <Check className="h-4 w-4" />
+  };
+
+  // Helper function to check if a date has any appointments
+  const hasAppointments = (date: Date) => {
+    return appointments.some(app => isSameDay(app.date, date));
+  };
+
+  // Helper function to check if a date has past appointments
+  const hasPastAppointments = (date: Date) => {
+    return isBefore(date, new Date()) && hasAppointments(date);
   };
   
   return (
@@ -166,8 +220,21 @@ const Schedule = () => {
             <Calendar
               mode="single"
               selected={selectedDate}
-              onSelect={setSelectedDate}
+              onSelect={handleDateSelect}
               className="rounded-md border w-full h-full pointer-events-auto"
+              modifiers={{
+                hasAppointment: (date) => hasAppointments(date),
+                isToday: (date) => isToday(date),
+                isPast: (date) => isBefore(date, new Date()) && !isToday(date),
+                hasCompletedAppointment: (date) => 
+                  appointments.some(app => isSameDay(app.date, date) && app.completed)
+              }}
+              modifiersClassNames={{
+                hasAppointment: "bg-blue-50 font-semibold",
+                isToday: "bg-blue-100 text-blue-900 font-bold",
+                isPast: "text-gray-400",
+                hasCompletedAppointment: "bg-gray-100 text-gray-600"
+              }}
               classNames={{
                 months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
                 month: "space-y-4 w-full",
@@ -177,10 +244,14 @@ const Schedule = () => {
                 row: "flex w-full mt-2",
                 cell: "h-12 w-full text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
                 day: cn(
-                  "h-12 w-full p-0 font-normal aria-selected:opacity-100 hover:bg-blue-50"
+                  "h-12 w-full p-0 font-normal aria-selected:opacity-100 hover:bg-blue-50",
+                  // Add a dot indicator for dates with appointments
+                  "relative after:absolute after:content-[''] after:bottom-2 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-transparent",
+                  // Add a dot indicator for dates with appointments
+                  "[&.hasAppointment]:after:bg-blue-500"
                 ),
                 day_selected: "bg-blue-500 text-white hover:bg-blue-600 hover:text-white",
-                day_today: "bg-blue-100 text-blue-800",
+                day_today: "bg-blue-100 text-blue-800 font-bold",
               }}
             />
           </CardContent>
@@ -190,7 +261,15 @@ const Schedule = () => {
       {/* Appointment events for selected date */}
       <Card className="mb-6 animate-scale-in">
         <CardHeader className="pb-3">
-          <CardTitle>Appointments for {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'Selected Date'}</CardTitle>
+          <CardTitle>
+            Appointments for {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'Selected Date'}
+            {selectedDate && isBefore(selectedDate, new Date()) && !isToday(selectedDate) && (
+              <span className="ml-2 text-sm bg-gray-200 text-gray-800 py-1 px-2 rounded-full">Past Date</span>
+            )}
+            {selectedDate && isToday(selectedDate) && (
+              <span className="ml-2 text-sm bg-green-200 text-green-800 py-1 px-2 rounded-full">Today</span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {currentAppointments.length > 0 ? (
@@ -198,15 +277,30 @@ const Schedule = () => {
               {currentAppointments.map((appointment) => (
                 <div 
                   key={appointment.id} 
-                  className="flex items-start p-4 border rounded-lg hover:bg-blue-50/40 transition-colors animate-scale-in"
+                  className={cn(
+                    "flex items-start p-4 border rounded-lg transition-colors animate-scale-in",
+                    appointment.completed 
+                      ? "border-gray-200 bg-gray-50" 
+                      : "hover:bg-blue-50/40 border-blue-200"
+                  )}
                 >
-                  <div className={`flex-shrink-0 w-12 h-12 rounded-full ${typeColors[appointment.type]} flex items-center justify-center mr-4`}>
-                    {typeIcons[appointment.type]}
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-full ${appointment.completed ? 'bg-gray-200 text-gray-600' : typeColors[appointment.type]} flex items-center justify-center mr-4`}>
+                    {appointment.completed ? <Check className="h-5 w-5" /> : typeIcons[appointment.type]}
                   </div>
                   <div className="flex-grow">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-medium">{appointment.title}</h3>
+                        <h3 className={cn(
+                          "font-medium",
+                          appointment.completed ? "text-gray-600" : ""
+                        )}>
+                          {appointment.title}
+                          {appointment.completed && (
+                            <span className="ml-2 text-xs bg-gray-200 text-gray-600 py-0.5 px-2 rounded-full">
+                              Completed
+                            </span>
+                          )}
+                        </h3>
                         <div className="flex items-center text-sm text-muted-foreground mt-1">
                           <Clock className="h-4 w-4 mr-1" />
                           {appointment.time}
@@ -215,13 +309,15 @@ const Schedule = () => {
                           {appointment.customer}
                         </div>
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => openDeleteDialog(appointment)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
+                      {!appointment.completed && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => openDeleteDialog(appointment)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      )}
                     </div>
                     {appointment.notes && (
                       <p className="mt-2 text-sm text-muted-foreground">{appointment.notes}</p>
@@ -369,6 +465,26 @@ const Schedule = () => {
             <Button variant="destructive" onClick={handleDeleteAppointment}>
               <Trash2 className="h-4 w-4 mr-2" />
               Yes, Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Past Appointment Dialog */}
+      <Dialog open={isPastAppointmentDialogOpen} onOpenChange={setIsPastAppointmentDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Past Appointments</DialogTitle>
+          </DialogHeader>
+          <p>This date has passed. Would you like to mark all appointments as completed?</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPastAppointmentDialogOpen(false)}>
+              <X className="h-4 w-4 mr-2" />
+              No
+            </Button>
+            <Button onClick={markAppointmentsAsCompleted}>
+              <Check className="h-4 w-4 mr-2" />
+              Yes, Mark as Completed
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -9,7 +9,7 @@ const Header = () => {
   return (
     <header className="flex items-center justify-between py-3 px-6 bg-white border-b shadow-sm animate-fade-in">
       <div className="flex items-center">
-        <h1 className="text-xl font-semibold text-blue-600 mr-6">GP Assistant</h1>
+        <h1 className="text-xl font-bold text-blue-600 mr-6">GP Assistant</h1>
         <div className="relative w-full max-w-md">
           <Search className="h-4 w-4 absolute left-3 top-3 text-muted-foreground" />
           <Input 

@@ -28,7 +28,7 @@ const Sidebar = () => {
             <div className="flex items-center justify-center w-10 h-10 rounded-md bg-blue-500 text-white mr-2">
               <span className="font-bold text-lg">G</span>
             </div>
-            <h1 className="text-xl font-semibold text-blue-600">GroMo AI</h1>
+            <h1 className="text-xl font-bold text-blue-600">GroMo AI</h1>
           </>
         )}
         {collapsed && (
@@ -40,7 +40,7 @@ const Sidebar = () => {
       
       <button 
         onClick={() => setCollapsed(!collapsed)} 
-        className="absolute -right-3 top-16 bg-white border rounded-full p-1 shadow-md hover:bg-gray-50 transition-colors z-10"
+        className="absolute -right-4 top-16 bg-blue-500 border-blue-600 rounded-full p-2 shadow-md hover:bg-blue-600 transition-colors z-10 text-white"
       >
         <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed ? "rotate-180" : "")} />
       </button>
