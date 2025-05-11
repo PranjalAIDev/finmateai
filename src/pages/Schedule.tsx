@@ -160,84 +160,89 @@ const Schedule = () => {
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar */}
-        <Card className="lg:col-span-1 animate-scale-in">
-          <CardContent className="p-4">
+      <div className="mb-6">
+        <Card className="animate-scale-in">
+          <CardContent className="p-6">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={setSelectedDate}
-              className="rounded-md border"
+              className="rounded-md border w-full h-full pointer-events-auto"
+              classNames={{
+                months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                month: "space-y-4 w-full",
+                table: "w-full border-collapse space-y-1",
+                head_row: "flex w-full",
+                head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.8rem] p-2",
+                row: "flex w-full mt-2",
+                cell: "h-12 w-full text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                day: cn(
+                  "h-12 w-full p-0 font-normal aria-selected:opacity-100 hover:bg-blue-50"
+                ),
+                day_selected: "bg-blue-500 text-white hover:bg-blue-600 hover:text-white",
+                day_today: "bg-blue-100 text-blue-800",
+              }}
             />
           </CardContent>
         </Card>
-        
-        {/* Appointments for selected date */}
-        <Card className="lg:col-span-2 animate-scale-in">
-          <CardHeader className="pb-3">
-            <CardTitle>Appointments</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {currentAppointments.length > 0 ? (
-              <div className="space-y-4">
-                {currentAppointments.map((appointment) => (
-                  <div 
-                    key={appointment.id} 
-                    className="flex items-start p-4 border rounded-lg hover:bg-blue-50/40 transition-colors animate-scale-in"
-                  >
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-full ${typeColors[appointment.type]} flex items-center justify-center mr-4`}>
-                      {typeIcons[appointment.type]}
-                    </div>
-                    <div className="flex-grow">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium">{appointment.title}</h3>
-                          <div className="flex items-center text-sm text-muted-foreground mt-1">
-                            <Clock className="h-4 w-4 mr-1" />
-                            {appointment.time}
-                            <span className="mx-2">•</span>
-                            <User className="h-4 w-4 mr-1" />
-                            {appointment.customer}
-                          </div>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => openDeleteDialog(appointment)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                      {appointment.notes && (
-                        <p className="mt-2 text-sm text-muted-foreground">{appointment.notes}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-64 text-center">
-                <CalendarIcon className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium">No appointments for this date</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {selectedDate
-                    ? `There are no appointments scheduled for ${format(selectedDate, 'MMMM d, yyyy')}`
-                    : 'Select a date to view appointments'}
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="mt-4"
-                  onClick={() => setIsAddDialogOpen(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Appointment
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
+      
+      {/* Appointment events for selected date */}
+      <Card className="mb-6 animate-scale-in">
+        <CardHeader className="pb-3">
+          <CardTitle>Appointments for {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'Selected Date'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {currentAppointments.length > 0 ? (
+            <div className="space-y-4">
+              {currentAppointments.map((appointment) => (
+                <div 
+                  key={appointment.id} 
+                  className="flex items-start p-4 border rounded-lg hover:bg-blue-50/40 transition-colors animate-scale-in"
+                >
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-full ${typeColors[appointment.type]} flex items-center justify-center mr-4`}>
+                    {typeIcons[appointment.type]}
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium">{appointment.title}</h3>
+                        <div className="flex items-center text-sm text-muted-foreground mt-1">
+                          <Clock className="h-4 w-4 mr-1" />
+                          {appointment.time}
+                          <span className="mx-2">•</span>
+                          <User className="h-4 w-4 mr-1" />
+                          {appointment.customer}
+                        </div>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => openDeleteDialog(appointment)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                    {appointment.notes && (
+                      <p className="mt-2 text-sm text-muted-foreground">{appointment.notes}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-32 text-center">
+              <CalendarIcon className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium">No appointments for this date</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {selectedDate
+                  ? `There are no appointments scheduled for ${format(selectedDate, 'MMMM d, yyyy')}`
+                  : 'Select a date to view appointments'}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
       
       {/* Add Appointment Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>

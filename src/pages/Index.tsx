@@ -10,6 +10,7 @@ import FinancialEducationTips from '@/components/FinancialEducationTips';
 import StatsCard from '@/components/StatsCard';
 import SmartSuggestions from '@/components/SmartSuggestions';
 import { Phone, TrendingUp, Users, CalendarCheck } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Sample data for financial products
 const financialProducts = [
@@ -69,8 +70,31 @@ const Index = () => {
         />
       </div>
       
-      {/* Smart Suggestions */}
-      <SmartSuggestions />
+      {/* AI Suggestions */}
+      <Card className="mb-6 border-blue-200 bg-blue-50/30 animate-fade-in">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center text-blue-700">
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              className="h-5 w-5 mr-2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 16v-4"></path>
+              <path d="M12 8h.01"></path>
+            </svg>
+            AI-Powered Suggestions
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SmartSuggestions />
+        </CardContent>
+      </Card>
       
       {/* Financial Products Row */}
       <h2 className="text-xl font-semibold mb-4">Financial Products to Sell</h2>
