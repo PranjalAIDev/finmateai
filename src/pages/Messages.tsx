@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Phone, MessageSquare } from 'lucide-react';
+import { Search, Phone, MessageSquare, Star } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -19,6 +18,7 @@ interface Message {
   unread: boolean;
   priority: 'high' | 'medium' | 'low';
   online: boolean;
+  favorite: boolean;
 }
 
 const initialMessages: Message[] = [
@@ -30,7 +30,8 @@ const initialMessages: Message[] = [
     time: '2m',
     unread: true,
     priority: 'high',
-    online: true
+    online: true,
+    favorite: false
   },
   { 
     id: '2', 
@@ -40,7 +41,8 @@ const initialMessages: Message[] = [
     time: '1h',
     unread: true,
     priority: 'medium',
-    online: false
+    online: false,
+    favorite: false
   },
   { 
     id: '3', 
@@ -50,7 +52,8 @@ const initialMessages: Message[] = [
     time: '3h',
     unread: true,
     priority: 'high',
-    online: false
+    online: false,
+    favorite: false
   },
   { 
     id: '4', 
@@ -60,7 +63,8 @@ const initialMessages: Message[] = [
     time: '1d',
     unread: false,
     priority: 'low',
-    online: false
+    online: false,
+    favorite: false
   },
 ];
 
@@ -70,6 +74,7 @@ const Messages = () => {
   const [sortBy, setSortBy] = useState<string>('recent');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [messageText, setMessageText] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<string>('all');
   
   const [chatMessages, setChatMessages] = useState<{text: string, sender: 'user' | 'contact', time: string}[]>([
     { text: 'Hello, I saw your advertisement about home loans and I am interested in knowing more', sender: 'contact', time: '10:30 AM' },
@@ -79,22 +84,28 @@ const Messages = () => {
     { text: 'Yes, please. That would be very helpful', sender: 'contact', time: '10:38 AM' },
   ]);
 
-  const filteredMessages = messages.filter(message => 
-    message.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    message.message.toLowerCase().includes(searchQuery.toLowerCase())
-  ).sort((a, b) => {
+  const filteredMessages = messages.filter(message => {
+    const matchesSearch = message.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         message.message.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (activeTab === 'all') return matchesSearch;
+    if (activeTab === 'unread') return matchesSearch && message.unread;
+    if (activeTab === 'favorites') return matchesSearch && message.favorite;
+    return matchesSearch;
+  }).sort((a, b) => {
     if (sortBy === 'recent') {
-      // Sort by time (most recent first)
       return a.time.includes('m') ? -1 : b.time.includes('m') ? 1 : 
              a.time.includes('h') ? -1 : b.time.includes('h') ? 1 : 1;
-    } else if (sortBy === 'priority') {
-      // Sort by priority (high > medium > low)
-      const priorityOrder = { high: 3, medium: 2, low: 1 };
-      return priorityOrder[b.priority] - priorityOrder[a.priority];
-    } else {
-      // Sort alphabetically by name
+    } else if (sortBy === 'name') {
       return a.name.localeCompare(b.name);
+    } else if (sortBy === 'high-priority') {
+      return a.priority === 'high' ? -1 : b.priority === 'high' ? 1 : 0;
+    } else if (sortBy === 'medium-priority') {
+      return a.priority === 'medium' ? -1 : b.priority === 'medium' ? 1 : 0;
+    } else if (sortBy === 'low-priority') {
+      return a.priority === 'low' ? -1 : b.priority === 'low' ? 1 : 0;
     }
+    return 0;
   });
 
   const handleSendMessage = () => {
@@ -133,6 +144,12 @@ const Messages = () => {
     }
   };
 
+  const toggleFavorite = (messageId: string) => {
+    setMessages(prev => prev.map(message => 
+      message.id === messageId ? {...message, favorite: !message.favorite} : message
+    ));
+  };
+
   const priorityColors = {
     high: "bg-red-100 text-red-800 hover:bg-red-200",
     medium: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
@@ -163,11 +180,11 @@ const Messages = () => {
             </div>
             
             <div className="flex justify-between mb-4">
-              <Tabs defaultValue="all" className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="w-full">
                   <TabsTrigger value="all" className="flex-1">All</TabsTrigger>
                   <TabsTrigger value="unread" className="flex-1">Unread</TabsTrigger>
-                  <TabsTrigger value="priority" className="flex-1">Priority</TabsTrigger>
+                  <TabsTrigger value="favorites" className="flex-1">Favorites</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -180,13 +197,15 @@ const Messages = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="recent">Recent</SelectItem>
-                  <SelectItem value="priority">Priority</SelectItem>
                   <SelectItem value="name">Name</SelectItem>
+                  <SelectItem value="high-priority">High Priority</SelectItem>
+                  <SelectItem value="medium-priority">Medium Priority</SelectItem>
+                  <SelectItem value="low-priority">Low Priority</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto">
+            <div className="space-y-2">
               {filteredMessages.map((message) => (
                 <div 
                   key={message.id} 
@@ -204,6 +223,7 @@ const Messages = () => {
                       <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
                     )}
                   </div>
+                  
                   <div className="ml-3 flex-grow min-w-0">
                     <div className="flex justify-between items-start">
                       <div className="font-medium text-sm truncate max-w-[120px]">{message.name}</div>
@@ -224,6 +244,17 @@ const Messages = () => {
                           <SelectItem value="low">Low priority</SelectItem>
                         </SelectContent>
                       </Select>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`ml-2 h-6 w-6 ${message.favorite ? 'text-yellow-500' : 'text-muted-foreground'}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(message.id);
+                        }}
+                      >
+                        <Star className="h-4 w-4" fill={message.favorite ? 'currentColor' : 'none'} />
+                      </Button>
                       {message.unread && <Badge className="ml-2 h-2 w-2 p-0 bg-blue-500 rounded-full" />}
                     </div>
                   </div>

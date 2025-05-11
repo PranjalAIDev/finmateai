@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BarChart2, MessageSquare, User, Calendar, Grid, ChevronLeft } from 'lucide-react';
+import { Home, BarChart2, MessageSquare, User, Calendar, Grid, ChevronRight } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 const Sidebar = () => {
@@ -22,59 +21,42 @@ const Sidebar = () => {
       "h-screen bg-white border-r flex-shrink-0 transition-all duration-300 animate-slide-in relative",
       collapsed ? "w-20" : "w-64"
     )}>
-      <div className="p-4 flex items-center border-b">
+      <div className="p-4 flex items-center justify-between border-b">
         {!collapsed && (
           <div className="flex items-center">
-            <h1 className="text-xl font-bold text-blue-600">GroMo AI</h1>
-            <button 
-              onClick={() => setCollapsed(!collapsed)} 
-              className="ml-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1 transition-colors"
-            >
-              <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed ? "rotate-180" : "")} />
-            </button>
+            <h1 className="text-xl font-bold text-blue-600">Finmate AI</h1>
           </div>
         )}
-        {collapsed && (
-          <div className="flex justify-center w-full">
-            <button 
-              onClick={() => setCollapsed(!collapsed)} 
-              className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1 transition-colors"
-            >
-              <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed ? "rotate-180" : "")} />
-            </button>
-          </div>
-        )}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={cn(
+            "rounded-full p-1 transition-colors",
+            "hover:bg-blue-500 hover:text-white",
+            !collapsed && "bg-transparent text-blue-600"
+          )}
+          style={{ background: 'none' }}
+        >
+          <ChevronRight className={cn("h-4 w-4 transition-transform", collapsed ? "rotate-180" : "")}/>
+        </button>
       </div>
       
-      <div className="py-4">
-        <ul className="space-y-1 px-2">
-          {menuItems.map((item, index) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <li key={index}>
-                <Link 
-                  to={item.path} 
-                  className={cn(
-                    "flex items-center gap-x-2 rounded-md px-3 py-2.5 text-sm font-medium transition-all hover:bg-blue-50",
-                    isActive ? "bg-blue-50 text-blue-700" : "text-gray-700"
-                  )}
-                >
-                  <item.icon className={cn("h-5 w-5", isActive ? "text-blue-700" : "text-gray-500")} />
-                  {!collapsed && <span>{item.label}</span>}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-
-      <div className={cn("absolute bottom-4 w-full px-6", collapsed ? "px-2" : "")}>
-        <div className="p-3 bg-blue-50 rounded-lg">
-          {!collapsed && (
-            <div className="text-xs font-medium text-blue-800">GP Assistant</div>
-          )}
-        </div>
-      </div>
+      <nav className="p-4 space-y-2">
+        {menuItems.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={cn(
+              "flex items-center px-3 py-2 rounded-lg transition-colors",
+              location.pathname === item.path
+                ? "bg-blue-50 text-blue-600"
+                : "text-gray-600 hover:bg-gray-50"
+            )}
+          >
+            <item.icon className="h-5 w-5" />
+            {!collapsed && <span className="ml-3">{item.label}</span>}
+          </Link>
+        ))}
+      </nav>
     </div>
   );
 };
