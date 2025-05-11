@@ -1,6 +1,5 @@
 
 import React from 'react';
-import Header from '@/components/Header';
 import GreetingHeader from '@/components/GreetingHeader';
 import FinancialProductCard from '@/components/FinancialProductCard';
 import CallingGraph from '@/components/CallingGraph';
@@ -9,7 +8,7 @@ import PotentialBuyers from '@/components/PotentialBuyers';
 import SalesTips from '@/components/SalesTips';
 import FinancialEducationTips from '@/components/FinancialEducationTips';
 import StatsCard from '@/components/StatsCard';
-import ChatsPanel from '@/components/ChatsPanel';
+import SmartSuggestions from '@/components/SmartSuggestions';
 import { Phone, TrendingUp, Users, CalendarCheck } from 'lucide-react';
 
 // Sample data for financial products
@@ -39,72 +38,64 @@ const financialProducts = [
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
-      <Header />
+    <div className="container mx-auto">
+      <GreetingHeader />
       
-      <main className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Main Content Area */}
-          <div className="flex-1">
-            <GreetingHeader />
-            
-            {/* Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <StatsCard 
-                title="Total Calls" 
-                value="28" 
-                icon={<Phone className="h-5 w-5" />}
-                trend={{ value: "12%", positive: true }}
-              />
-              <StatsCard 
-                title="Conversion Rate" 
-                value="24.5%" 
-                icon={<TrendingUp className="h-5 w-5" />}
-                trend={{ value: "5.3%", positive: true }}
-              />
-              <StatsCard 
-                title="Active Leads" 
-                value="42" 
-                icon={<Users className="h-5 w-5" />}
-              />
-              <StatsCard 
-                title="Meetings Scheduled" 
-                value="8" 
-                icon={<CalendarCheck className="h-5 w-5" />}
-                trend={{ value: "2", positive: true }}
-              />
-            </div>
-            
-            {/* Financial Products Row */}
-            <h2 className="text-xl font-semibold mb-4">Financial Products to Sell</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {financialProducts.map((product, index) => (
-                <FinancialProductCard key={index} {...product} />
-              ))}
-            </div>
-            
-            {/* Calling Graph and Follow Ups */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              <CallingGraph />
-              <PotentialBuyers />
-            </div>
-            
-            {/* Follow-up Table */}
-            <div className="mb-6">
-              <FollowUpTable />
-            </div>
-            
-            {/* Tips Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <SalesTips />
-              <FinancialEducationTips />
-            </div>
-          </div>
-          
-          {/* Chats Panel */}
-          <ChatsPanel />
-        </div>
-      </main>
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatsCard 
+          title="Total Calls" 
+          value="32" 
+          icon={<Phone className="h-5 w-5" />}
+          trend={{ value: "12%", positive: true }}
+        />
+        <StatsCard 
+          title="Conversion Rate" 
+          value="24%" 
+          icon={<TrendingUp className="h-5 w-5" />}
+          trend={{ value: "5.3%", positive: true }}
+        />
+        <StatsCard 
+          title="Active Customers" 
+          value="87" 
+          icon={<Users className="h-5 w-5" />}
+          trend={{ value: "3%", positive: false }}
+        />
+        <StatsCard 
+          title="Meetings Scheduled" 
+          value="8" 
+          icon={<CalendarCheck className="h-5 w-5" />}
+          trend={{ value: "2", positive: true }}
+        />
+      </div>
+      
+      {/* Smart Suggestions */}
+      <SmartSuggestions />
+      
+      {/* Financial Products Row */}
+      <h2 className="text-xl font-semibold mb-4">Financial Products to Sell</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        {financialProducts.map((product, index) => (
+          <FinancialProductCard key={index} {...product} />
+        ))}
+      </div>
+      
+      {/* Calling Graph and Potential Buyers */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <CallingGraph />
+        <PotentialBuyers />
+      </div>
+      
+      {/* Follow-up Table */}
+      <div className="mb-6">
+        <FollowUpTable />
+      </div>
+      
+      {/* Tips Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <SalesTips />
+        <FinancialEducationTips />
+      </div>
     </div>
   );
 };
