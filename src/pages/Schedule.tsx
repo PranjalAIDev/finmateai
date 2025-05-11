@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Calendar as CalendarIcon, Clock, User, Trash2, Check, X } from 'lucide-react';
-import { format, isBefore, isToday, isSameDay } from 'date-fns';
+import { format, isBefore, isToday, isSameDay, addDays, isAfter } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -152,9 +152,8 @@ const Schedule = () => {
       setSelectedDate(date);
       const appsForDay = getAppointmentsForDate(date);
       
-      // Check if this is a past date with completed appointments
+      // Check if this is a past date with incomplete appointments
       if (isBefore(date, new Date()) && appsForDay.some(app => !app.completed)) {
-        // Show dialog for past appointments that aren't marked as completed
         setIsPastAppointmentDialogOpen(true);
       }
     }
@@ -175,9 +174,9 @@ const Schedule = () => {
   const currentAppointments = selectedDate ? getAppointmentsForDate(selectedDate) : [];
   
   const typeColors = {
-    'meeting': 'bg-blue-100 text-blue-800',
-    'call': 'bg-green-100 text-green-800',
-    'follow-up': 'bg-yellow-100 text-yellow-800'
+    'meeting': 'bg-blue-100 text-blue-800 border-blue-300',
+    'call': 'bg-green-100 text-green-800 border-green-300',
+    'follow-up': 'bg-amber-100 text-amber-800 border-amber-300'
   };
   
   const typeIcons = {
@@ -186,14 +185,50 @@ const Schedule = () => {
     'follow-up': <Check className="h-4 w-4" />
   };
 
-  // Helper function to check if a date has any appointments
-  const hasAppointments = (date: Date) => {
-    return appointments.some(app => isSameDay(app.date, date));
-  };
-
-  // Helper function to check if a date has past appointments
-  const hasPastAppointments = (date: Date) => {
-    return isBefore(date, new Date()) && hasAppointments(date);
+  // Enhanced function to add appointment indicators on calendar days
+  const renderAppointmentIndicators = (day: Date) => {
+    const appsForDay = getAppointmentsForDate(day);
+    if (appsForDay.length === 0) return null;
+    
+    const isPastDay = isBefore(day, new Date()) && !isToday(day);
+    const isUpcomingDay = isAfter(day, addDays(new Date(), -1)); // Today or future
+    
+    // Group by type
+    const meetingCount = appsForDay.filter(app => app.type === 'meeting').length;
+    const callCount = appsForDay.filter(app => app.type === 'call').length;
+    const followUpCount = appsForDay.filter(app => app.type === 'follow-up').length;
+    
+    return (
+      <div className="absolute -right-2 -top-2 flex flex-col gap-1 z-10">
+        {meetingCount > 0 && (
+          <span className={cn(
+            "inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded-full border",
+            isPastDay ? "bg-gray-100 text-gray-500 border-gray-300" : "bg-blue-100 text-blue-800 border-blue-300"
+          )}>
+            {isUpcomingDay && <User className="h-2.5 w-2.5 mr-0.5" />}
+            {meetingCount}
+          </span>
+        )}
+        {callCount > 0 && (
+          <span className={cn(
+            "inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded-full border",
+            isPastDay ? "bg-gray-100 text-gray-500 border-gray-300" : "bg-green-100 text-green-800 border-green-300"
+          )}>
+            {isUpcomingDay && <Phone className="h-2.5 w-2.5 mr-0.5" />}
+            {callCount}
+          </span>
+        )}
+        {followUpCount > 0 && (
+          <span className={cn(
+            "inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded-full border",
+            isPastDay ? "bg-gray-100 text-gray-500 border-gray-300" : "bg-amber-100 text-amber-800 border-amber-300"
+          )}>
+            {isUpcomingDay && <Check className="h-2.5 w-2.5 mr-0.5" />}
+            {followUpCount}
+          </span>
+        )}
+      </div>
+    );
   };
   
   return (
@@ -223,32 +258,43 @@ const Schedule = () => {
               onSelect={handleDateSelect}
               className="rounded-md border w-full h-full pointer-events-auto"
               modifiers={{
-                hasAppointment: (date) => hasAppointments(date),
+                hasAppointment: (date) => getAppointmentsForDate(date).length > 0,
                 isToday: (date) => isToday(date),
                 isPast: (date) => isBefore(date, new Date()) && !isToday(date),
-                hasCompletedAppointment: (date) => 
-                  appointments.some(app => isSameDay(app.date, date) && app.completed)
+                hasPastAppointment: (date) => 
+                  getAppointmentsForDate(date).some(app => app.completed),
+                hasUpcomingAppointment: (date) =>
+                  isAfter(date, addDays(new Date(), -1)) && getAppointmentsForDate(date).length > 0,
+                hasPastIncompleteAppointment: (date) =>
+                  isBefore(date, new Date()) && !isToday(date) && getAppointmentsForDate(date).some(app => !app.completed),
               }}
               modifiersClassNames={{
-                hasAppointment: "bg-blue-50 font-semibold",
-                isToday: "bg-blue-100 text-blue-900 font-bold",
-                isPast: "text-gray-400",
-                hasCompletedAppointment: "bg-gray-100 text-gray-600"
+                hasAppointment: "bg-blue-50 font-semibold relative",
+                isToday: "bg-blue-100 text-blue-900 font-bold relative",
+                isPast: "text-gray-400 relative",
+                hasPastAppointment: "bg-gray-100 text-gray-600 relative",
+                hasUpcomingAppointment: "bg-blue-50 text-blue-800 font-semibold relative",
+                hasPastIncompleteAppointment: "bg-amber-50 text-amber-800 relative",
+              }}
+              components={{
+                DayContent: (props) => {
+                  return (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      <div>{props.date.getDate()}</div>
+                      {renderAppointmentIndicators(props.date)}
+                    </div>
+                  );
+                }
               }}
               classNames={{
-                months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
                 month: "space-y-4 w-full",
                 table: "w-full border-collapse space-y-1",
                 head_row: "flex w-full",
                 head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.8rem] p-2",
                 row: "flex w-full mt-2",
-                cell: "h-12 w-full text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                cell: "h-14 w-full text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
                 day: cn(
-                  "h-12 w-full p-0 font-normal aria-selected:opacity-100 hover:bg-blue-50",
-                  // Add a dot indicator for dates with appointments
-                  "relative after:absolute after:content-[''] after:bottom-2 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-transparent",
-                  // Add a dot indicator for dates with appointments
-                  "[&.hasAppointment]:after:bg-blue-500"
+                  "h-12 w-full p-0 font-normal aria-selected:opacity-100 hover:bg-blue-50 rounded-md"
                 ),
                 day_selected: "bg-blue-500 text-white hover:bg-blue-600 hover:text-white",
                 day_today: "bg-blue-100 text-blue-800 font-bold",
@@ -281,10 +327,18 @@ const Schedule = () => {
                     "flex items-start p-4 border rounded-lg transition-colors animate-scale-in",
                     appointment.completed 
                       ? "border-gray-200 bg-gray-50" 
-                      : "hover:bg-blue-50/40 border-blue-200"
+                      : isBefore(appointment.date, new Date()) && !isToday(appointment.date)
+                        ? "border-amber-200 bg-amber-50/40"
+                        : isToday(appointment.date)
+                          ? "border-blue-300 bg-blue-50/60 shadow-sm"
+                          : "border-blue-200 bg-white hover:bg-blue-50/40"
                   )}
                 >
-                  <div className={`flex-shrink-0 w-12 h-12 rounded-full ${appointment.completed ? 'bg-gray-200 text-gray-600' : typeColors[appointment.type]} flex items-center justify-center mr-4`}>
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-full ${
+                    appointment.completed 
+                      ? 'bg-gray-200 text-gray-600' 
+                      : typeColors[appointment.type]
+                  } flex items-center justify-center mr-4`}>
                     {appointment.completed ? <Check className="h-5 w-5" /> : typeIcons[appointment.type]}
                   </div>
                   <div className="flex-grow">
@@ -298,6 +352,16 @@ const Schedule = () => {
                           {appointment.completed && (
                             <span className="ml-2 text-xs bg-gray-200 text-gray-600 py-0.5 px-2 rounded-full">
                               Completed
+                            </span>
+                          )}
+                          {!appointment.completed && isBefore(appointment.date, new Date()) && !isToday(appointment.date) && (
+                            <span className="ml-2 text-xs bg-amber-200 text-amber-800 py-0.5 px-2 rounded-full">
+                              Overdue
+                            </span>
+                          )}
+                          {!appointment.completed && isToday(appointment.date) && (
+                            <span className="ml-2 text-xs bg-blue-200 text-blue-800 py-0.5 px-2 rounded-full">
+                              Today
                             </span>
                           )}
                         </h3>

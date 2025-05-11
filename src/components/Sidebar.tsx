@@ -24,26 +24,27 @@ const Sidebar = () => {
     )}>
       <div className="p-4 flex items-center border-b">
         {!collapsed && (
-          <>
-            <div className="flex items-center justify-center w-10 h-10 rounded-md bg-blue-500 text-white mr-2">
-              <span className="font-bold text-lg">G</span>
-            </div>
+          <div className="flex items-center">
             <h1 className="text-xl font-bold text-blue-600">GroMo AI</h1>
-          </>
+            <button 
+              onClick={() => setCollapsed(!collapsed)} 
+              className="ml-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1 transition-colors"
+            >
+              <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed ? "rotate-180" : "")} />
+            </button>
+          </div>
         )}
         {collapsed && (
-          <div className="flex items-center justify-center w-10 h-10 rounded-md bg-blue-500 text-white mx-auto">
-            <span className="font-bold text-lg">G</span>
+          <div className="flex justify-center w-full">
+            <button 
+              onClick={() => setCollapsed(!collapsed)} 
+              className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1 transition-colors"
+            >
+              <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed ? "rotate-180" : "")} />
+            </button>
           </div>
         )}
       </div>
-      
-      <button 
-        onClick={() => setCollapsed(!collapsed)} 
-        className="absolute -right-4 top-16 bg-blue-500 border-blue-600 rounded-full p-2 shadow-md hover:bg-blue-600 transition-colors z-10 text-white"
-      >
-        <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed ? "rotate-180" : "")} />
-      </button>
       
       <div className="py-4">
         <ul className="space-y-1 px-2">
